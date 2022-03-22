@@ -4,15 +4,17 @@
 import time
 import serial
 from threading import Thread
+from matplotlib import pyplot as plt
 from appJar import gui
 
 PORT = "/dev/ttyUSB0"
-RATE = 2_000_000
+RATE = 2000000
 
 class Pendulum:
     def __init__(self):
         self.ser = None
         self.stop = False
+        self.buf = b''
 
     def init_ser(self):
         if self.ser is None:
@@ -20,14 +22,28 @@ class Pendulum:
         return
 
     def record(self):
-        self.data = []
+        self.buf = b''
         while not self.stop:
             raw_data = self.ser.read(32)
-            print(raw_data)
-            self.data.append(raw_data)
+#            print(raw_data)
+            self.buf = self.buf + raw_data
         self.ser = None
         return
 
+def parse_rawdata(rawdata):
+    ret = []
+    numbers = rawdata.split(b'\r\n')
+    print(rawdata)
+    print(numbers)
+    for num in numbers:
+        num = num.decode()
+        if num.replace("-","1").isnumeric():
+            ret.append(int(num))
+    return ret
+
+def show_data(data):
+    plt.plot(data)
+    plt.show()
 
 def onButton_record(buttonName):
     pendulum.stop = False
@@ -39,8 +55,12 @@ def onButton_stop(buttonName):
     pendulum.stop = True
     app.setMessage("mess", "")
     time.sleep(1)
-    print(pendulum.data)
-    print(pendulum.ser)
+#    print(pendulum.data)
+#    print(pendulum.ser)
+    if pendulum.buf:
+        data = parse_rawdata(pendulum.buf)
+        print(data)
+        show_data(data)
 
 pendulum = Pendulum()
 app = gui()
