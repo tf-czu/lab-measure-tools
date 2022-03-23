@@ -5,6 +5,9 @@ import time
 import serial
 from threading import Thread
 from matplotlib import pyplot as plt
+import datetime
+import csv
+
 from appJar import gui
 
 PORT = "/dev/ttyUSB0"
@@ -33,8 +36,8 @@ class Pendulum:
 def parse_rawdata(rawdata):
     ret = []
     numbers = rawdata.split(b'\r\n')
-    print(rawdata)
-    print(numbers)
+#    print(rawdata)
+#    print(numbers)
     for num in numbers:
         num = num.decode()
         if num.replace("-","1").isnumeric():
@@ -57,10 +60,17 @@ def onButton_stop(buttonName):
     time.sleep(1)
 #    print(pendulum.data)
 #    print(pendulum.ser)
-    if pendulum.buf:
+    if len(pendulum.buf) > 0:
         data = parse_rawdata(pendulum.buf)
-        print(data)
+#        print(data)
+        csv_name = datetime.datetime.now().strftime("pendulum_%y%m%d_%H%M%S.csv")
+        with open(csv_name, "w", newline="") as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=",")
+            for num in data:
+               csv_writer.writerow([num])
         show_data(data)
+        pendulum.buf = b""
+    return
 
 pendulum = Pendulum()
 app = gui()
@@ -71,3 +81,4 @@ app.addButton("Record", onButton_record, row=1, column=0)
 app.addButton("Stop", onButton_stop, row=1, column=1)
 app.addMessage("mess", "", row=2, column=0, colspan=2)
 app.go()
+
