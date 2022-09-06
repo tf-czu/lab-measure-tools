@@ -9,9 +9,15 @@ import datetime
 import csv
 
 from appJar import gui
+from launcher import Launch
 
 PORT = "/dev/ttyUSB0"
 RATE = 2000000
+
+g_rate = "44100"  # 96000
+g_arecord_command = ["arecord", "-r", g_rate, "tmp/test.vaw"]
+g_mic_recorder = None
+
 
 class Pendulum:
     def __init__(self):
@@ -32,6 +38,7 @@ class Pendulum:
             self.buf = self.buf + raw_data
         self.ser = None
         return
+        
 
 def parse_rawdata(rawdata):
     ret = []
@@ -49,13 +56,24 @@ def show_data(data):
     plt.show()
 
 def onButton_record(buttonName):
+    global g_mic_recorder
+    command = g_arecord_command
+    
     pendulum.stop = False
     pendulum.init_ser()
+    if g_mic_recorder is None:
+        g_mic_recorder = Launch(command)
+        
+    time.sleep(1)
     app.setMessage("mess", "Recording..")
+    
     Thread(target=pendulum.record, daemon=True).start()
+    g_mic_recorder.start()
+
 
 def onButton_stop(buttonName):
     pendulum.stop = True
+    g_mic_recorder.quit()
     app.setMessage("mess", "")
     time.sleep(1)
 #    print(pendulum.data)
@@ -70,6 +88,7 @@ def onButton_stop(buttonName):
                csv_writer.writerow([num])
         show_data(data)
         pendulum.buf = b""
+        
     return
 
 pendulum = Pendulum()
