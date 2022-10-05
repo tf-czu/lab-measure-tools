@@ -7,6 +7,7 @@ from threading import Thread
 from matplotlib import pyplot as plt
 import datetime
 import csv
+import os
 
 from appJar import gui
 from launcher import Launch
@@ -15,8 +16,10 @@ PORT = "/dev/ttyUSB0"
 RATE = 2000000
 
 g_rate = "44100"  # 96000
-g_arecord_command = ["arecord", "-r", g_rate, "tmp/test.vaw"]
+g_arecord_command = ["arecord", "-r", g_rate, "tmp/test.wav"]
 g_mic_recorder = None
+g_measure_label = ""
+
 
 
 class Pendulum:
@@ -57,15 +60,21 @@ def show_data(data):
 
 def onButton_record(buttonName):
     global g_mic_recorder
+    global g_measure_label
     command = g_arecord_command
+    g_measure_label = app.getEntry("label")
+    print(g_measure_label)
+    wav_name = datetime.datetime.now().strftime(f"apple_{g_measure_label}_%H%M%S.wav")
+    wav_path = os.path.join("wav", wav_name)
     
     pendulum.stop = False
     pendulum.init_ser()
     if g_mic_recorder is None:
+        command[3] = wav_path
         g_mic_recorder = Launch(command)
         
     time.sleep(1)
-    app.setMessage("mess", "Recording..")
+    app.setMessage("mess", f"Recording..\n{g_measure_label}")
     
     Thread(target=pendulum.record, daemon=True).start()
     g_mic_recorder.start()
@@ -81,7 +90,7 @@ def onButton_stop(buttonName):
     if len(pendulum.buf) > 0:
         data = parse_rawdata(pendulum.buf)
 #        print(data)
-        csv_name = datetime.datetime.now().strftime("pendulum_%y%m%d_%H%M%S.csv")
+        csv_name = datetime.datetime.now().strftime(os.path.join("data",f"pendulum_{g_measure_label}_%y%m%d_%H%M%S.csv"))
         with open(csv_name, "w", newline="") as csv_file:
             csv_writer = csv.writer(csv_file, delimiter=",")
             for num in data:
@@ -98,6 +107,7 @@ app = gui()
 app.setResizable(canResize=False)
 app.addButton("Record", onButton_record, row=1, column=0)
 app.addButton("Stop", onButton_stop, row=1, column=1)
-app.addMessage("mess", "", row=2, column=0, colspan=2)
+app.addEntry("label", row=2)
+app.addMessage("mess", "", row=3, column=0, colspan=2)
 app.go()
 
