@@ -14,7 +14,7 @@ class Quido:
         self.open_relays()
 
     def sent_cmd(self, cmd, read_response=True):
-        cmd = cmd+"\n"
+        cmd = cmd+"\r"
         self.ser.write(cmd.encode())
         if read_response:
             return self.ser_read()
@@ -27,7 +27,7 @@ class Quido:
             d = self.ser.read(128)
             if len(d)>0:
                 data += d
-            if b"\n" in data:
+            if b"\r" in data:
                 return data.decode()
             if time.time() - t0 > self.read_timeout:
                 return None
@@ -42,7 +42,7 @@ class Quido:
     def open_relays(self):
         for ii in range(1, 5):
             instruction = "OS"
-            relay_id = ii
+            relay_id = str(ii)
             task = "L"
             self.relay_set(relay_id, instruction, task)
         return
