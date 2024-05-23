@@ -98,6 +98,31 @@ def perform_pca(data, variants=None, normalize_data=True, draw=True):
     return (pc_1, pc_2, pc_3), pca
 
 
+def factor_analysis(data, n_factors, rotation="varimax", variants=None, normalize_data=True, draw=True):
+    if not isinstance(data, np.ndarray):
+        data = np.asarray(data)
+    if normalize_data:
+        # Standardize features by removing the mean and scaling to unit variance, z = (x - u) / s
+        data = StandardScaler().fit_transform(data)
+
+    fa = decomposition.FactorAnalysis(rotation=rotation)
+    fa.set_params(n_components=n_factors)
+    fa.fit(data)
+    data_fitted = fa.transform(data)
+    assert data_fitted.shape == (data.shape[0], 3), data_fitted.shape
+
+    if n_factors >= 3 and draw:
+        f1 = data_fitted[:, 0]
+        f2 = data_fitted[:, 1]
+        f3 = data_fitted[:, 2]
+        draw_pca_3d(f1, f2, f3, variants=variants)
+
+    print("components_")
+    print(fa.components_)
+
+    return fa
+
+
 if __name__ == "__main__":
     data, labels, header = read_data(sys.argv[1])
     perform_pca(data, variants=labels)
