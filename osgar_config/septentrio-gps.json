@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "robot": {
+    "modules": {
+      "rtk_gps": {
+        "driver": "gps",
+        "init": {}
+      },
+      
+      "rtk_gps_serial": {
+        "driver": "serial",
+        "in": ["raw"],
+        "out": ["raw"],
+        "init": {"port": "/dev/ttyACM0", "speed": 115200}
+      }
+
+    },
+    "links": [
+              ["rtk_gps_serial.raw", "rtk_gps.raw"]
+    ]
+  }
+}
