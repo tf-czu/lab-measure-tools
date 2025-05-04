@@ -6,7 +6,7 @@
         "driver": "gps",
         "init": {}
       },
-      
+
       "rtk_gps_serial": {
         "driver": "serial",
         "in": ["raw"],
