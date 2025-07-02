@@ -43,6 +43,7 @@ def draw_pca_3d(x, y, z, variants=None):
         if not isinstance(variants, np.ndarray):
             variants = np.asarray(variants)
         color = ["b", "r", "g", "y", "k"]  # TODO add some color generator
+        assert len(color) >= len(set(variants))
         for ii, item in enumerate(set(variants)):
             x_i = x[variants == item]
             y_i = y[variants == item]
@@ -66,6 +67,7 @@ def perform_pca(data, variants=None, normalize_data=True, draw=True):
     if normalize_data:
         # Standardize features by removing the mean and scaling to unit variance, z = (x - u) / s
         data = StandardScaler().fit_transform(data)
+        print(data.shape)
 
     pca = decomposition.PCA(n_components=3)
     pca.fit(data)
